@@ -19,10 +19,35 @@ SENSOR_1_ID = 0
 SENSOR_2_ID = 1
 
 
-
+ParkAssitVolumeState_ID=0
+SensorAvailabilityFrontCenter_ID=1
+SensorAvailabilityFrontleft_ID=2
+SensorAvailabilityFrontRight_ID=3
+SensorAvailabilityRearCenter_ID=4
+SensorAvailabilityRearLeft_ID=5
+SensorAvailabilityRearRight_ID=6
+SonarObstacleDistanceDisplay_ID=7
+UPA_ClosingAuthorization_ID=8
+UPA_Image_DisplayRequest_ID=9
+UPA_Obstacle_Zone_Front_Center_ID=10
+UPA_Obstacle_zone_front_left_ID=11
+UPA_Obstacle_zone_front_Right_ID=12
+UPA_Obstacle_zone_Rear_Center_ID=13
+UPA_Obstacle_zone_Rear_Left_ID=14
+UPA_Obstacle_zone_Rear_Right_ID=15
+UPA_SoundActivationBeep_ID=16
+UPA_SoundErrorBeep_ID=17
+UPA_SoundObstacleZone_ID=18
+UPA_SoundReccurencePeriod_ID=19
+UPA_SoundReccurenceType_ID=20
+UPA_SystemState_ID=21
+UPAStatusDisplayRequest_ID=22
 triggers=[19,23]
 echos=[16,24]
-sensorToSignal=[10,11]
+on=1
+off=0
+periode=40
+sensorToSignal=[16,19,18]
 
 
 class TestCanFrame():
@@ -35,10 +60,10 @@ class TestCanFrame():
         print("Bus created")
         
         #byte position 1 & bit position 4 --> startbit=10 & signal size 3
-        self.signals = [cansignal.CanSignalDefinition('ParkAssitVolumeState', 47, 3),
-                        cansignal.CanSignalDefinition('SensorAvailabilityFrontCenter', 33, 1),
-                        cansignal.CanSignalDefinition('SensorAvailabilityFrontleft', 32, 1),
-                        cansignal.CanSignalDefinition('SensorAvailabilityFrontRight', 40, 1),
+        self.signals = [cansignal.CanSignalDefinition('ParkAssitVolumeState', 48, 3),
+                        cansignal.CanSignalDefinition('SensorAvailabilityFrontCenter', 34, 1),
+                        cansignal.CanSignalDefinition('SensorAvailabilityFrontleft', 33, 1),
+                        cansignal.CanSignalDefinition('SensorAvailabilityFrontRight', 41, 1),
                         cansignal.CanSignalDefinition('SensorAvailabilityRearCenter', 55, 1),
                         cansignal.CanSignalDefinition('SensorAvailabilityRearLeft', 54, 1),
                         cansignal.CanSignalDefinition('SensorAvailabilityRearRight', 53, 1),
@@ -48,12 +73,13 @@ class TestCanFrame():
                         cansignal.CanSignalDefinition('UPA_Obstacle_Zone_Front_Center', 31, 3),
                         cansignal.CanSignalDefinition('UPA_Obstacle_zone_front_left', 15, 3),
                         cansignal.CanSignalDefinition('UPA_Obstacle_zone_front_Right', 12, 3),
-                        cansignal.CanSignalDefinition('UPA_Obstacle_zone_Rear_Center', 28, 3),
+                        cansignal.CanSignalDefinition('UPA_Obstacle_zone_Rear_Center', 29, 3),
                         cansignal.CanSignalDefinition('UPA_Obstacle_zone_Rear_Left', 23, 3),
                         cansignal.CanSignalDefinition('UPA_Obstacle_zone_Rear_Right', 20, 3),
+                        cansignal.CanSignalDefinition('UPA_SoundActivationBeep ', 24, 1),
                         cansignal.CanSignalDefinition('UPA_SoundErrorBeep', 25, 1),
-                        cansignal.CanSignalDefinition('UPA_SoundObstacleZone', 36, 3),
-                        cansignal.CanSignalDefinition('UPA_SoundReccurencePeriod', 7, 7),
+                        cansignal.CanSignalDefinition('UPA_SoundObstacleZone', 34, 3),
+                        cansignal.CanSignalDefinition('UPA_SoundReccurencePeriod',1, 7),
                         cansignal.CanSignalDefinition('UPA_SoundReccurenceType', 0, 1),
                         cansignal.CanSignalDefinition('UPA_SystemState', 9, 2),
                         cansignal.CanSignalDefinition('UPAStatusDisplayRequest', 39, 3)]
@@ -89,9 +115,10 @@ class TestCanFrame():
         print("Frame created")
         
         self.th1 = threading.Thread(target=self.sensor_reader,args=(triggers[SENSOR_2_ID], echos[SENSOR_2_ID],SENSOR_2_ID))
-        self.th2 = threading.Thread(target=self.sensor_reader,args=(triggers[SENSOR_1_ID], echos[SENSOR_1_ID],SENSOR_1_ID))
+        #self.th2 = threading.Thread(target=self.sensor_reader,args=(triggers[SENSOR_2_ID], echos[SENSOR_2_ID],SENSOR_2_ID))
         
     def sensor_reader(self,trigger_id, echo_id, sensor_id):
+        Periode_calculer=127
         while(1):
             
             GPIO.setmode(GPIO.BCM)
@@ -112,24 +139,41 @@ class TestCanFrame():
             distance_temp=pulse_duration*17150
             distance[sensor_id]=round(distance_temp)
             print("Distance sensor numero ", sensor_id, " :",distance[sensor_id],"cm")
-            if distance[sensor_id] < 30 :
+            if distance[sensor_id] < 30  :
                 print("level1");
                 levels[sensor_id] = 1;
+                print("periode_calculer=126")
+                periode_calculer=126
             elif 30<distance[sensor_id] <50 :
                 print("level2");
                 levels[sensor_id] = 2;
+                print("periode_calculer=94")
+                periode_calculer=94
             elif 50<distance[sensor_id] <70 :
                 print("level3");
                 levels[sensor_id] = 3;
+                print("periode_calculer=30")
+                periode_calculer=30
             else :
                 distance[sensor_id] >70 
                 print("level4");
                 levels[sensor_id] = 4;
+                print("periode_calculer=0")
+                periode_calculer=0
+
+                
+#             if periode_calculer<periode :
+#                 periode=periode_calculer
+                
+            
             #frame.set_signalvalue(signals[sensor_id], level[sensor_id])
             
             #bus.setup_periodic_send(frame, interval=100, restart_timer=False)
             print("set_signalvalue")
-            self.frame.set_signalvalue(self.signals[sensorToSignal[sensor_id]], levels[sensor_id])
+#             self.frame.set_signalvalue(self.signals[sensorToSignal[sensor_id]],levels[sensor_id])
+            self.frame.set_signalvalue(self.signals[UPA_SoundReccurencePeriod_ID],periode)
+#             self.frame.set_signalvalue(self.signals[UPA_SoundActivationBeep_ID],off)
+#             self.frame.set_signalvalue(self.signals[UPA_SoundObstacleZone_ID],3)
             #print("get_signalvalue ", self.frame.get_signalvalue(self.signals[sensor_id]))
             self.bus.setup_periodic_send(self.frame, interval=100, restart_timer=False)
             
@@ -141,10 +185,10 @@ class TestCanFrame():
         self.bus.setup_periodic_send(self.frame, interval=100, restart_timer=True)
 
         self.th1.start()
-        self.th2.start()
+        #self.th2.start()
         print("Update!")
         self.th1.join()
-        self.th2.join()
+        #self.th2.join()
 
 if __name__ == '__main__':
     

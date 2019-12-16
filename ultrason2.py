@@ -9,9 +9,11 @@ ECHO=24
 GPIO.setup(TRIG,GPIO.OUT)
 GPIO.setup(ECHO,GPIO.IN)
 GPIO.output(TRIG, False)
+
 while(1):
     
-    time.sleep(0.5)
+    time.sleep(0.1
+               )
     GPIO.output(TRIG, True)
 
     time.sleep(0.00001)
@@ -31,21 +33,21 @@ while(1):
     distance = round(distance, 2)
     print ("Distance:",distance,"cm")
     
-    if(distance<=30):
+    if(distance<=20):
         print ("level1")
         bus=can.interface.Bus(channel='slcan0', bustype='socketcan_native')
         msg=can.Message(arbitration_id=0x53D,
                 data=[254, 0, 0, 0, 12, 10, 0, 0],
                 extended_id=False)
         bus.send(msg)
-    elif (distance>30 and distance<=50):
+    elif (distance>20 and distance<=30):
         print ("level2")
-        bus=can.interface.Bus(channel='can0', bustype='socketcan_native')
+        bus=can.interface.Bus(channel='slcan0', bustype='socketcan_native')
         msg=can.Message(arbitration_id=0x53D,
                 data=[190, 0, 0, 0, 12, 10, 0, 0],
                 extended_id=False)
         bus.send(msg)
-    elif (distance>50 and distance<=70):
+    elif (distance>30 and distance<=40):
         print ("level3")
         bus=can.interface.Bus(channel='slcan0', bustype='socketcan_native')
         msg=can.Message(arbitration_id=0x53D,
